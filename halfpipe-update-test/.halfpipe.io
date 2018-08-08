@@ -1,6 +1,7 @@
 team: engineering-enablement
 pipeline: halfpipe-update-test
 auto_update: true
+
 repo:
   watched_paths:
   - halfpipe-update-test
