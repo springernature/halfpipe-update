@@ -30,3 +30,9 @@ tasks:
   script: /bin/echo task iv
   docker:
     image: alpine
+
+- type: run
+  name: task V
+  script: /bin/echo task v
+  docker:
+    image: alpine
