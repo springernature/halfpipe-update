@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -eu pipefail
+set -euo pipefail
 
 echo "STEP 1/4: Updating fly to latest version"
 fly -t ci sync
