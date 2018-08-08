@@ -5,4 +5,4 @@ repo:
   - halfpipe-update-docker
 tasks:
 - type: docker-push
-  image: eu.gcr.io/halfpipe-io/halfpipe-update
+  image: eu.gcr.io/halfpipe-io/halfpipe-auto-update
