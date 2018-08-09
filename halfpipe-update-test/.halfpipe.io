@@ -42,3 +42,9 @@ tasks:
   script: /bin/echo task 6
   docker:
     image: alpine
+
+- type: run
+  name: task.7
+  script: /bin/echo task 7
+  docker:
+    image: alpine
