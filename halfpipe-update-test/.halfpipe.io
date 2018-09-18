@@ -19,3 +19,14 @@ tasks:
   docker:
     image: alpine
 
+- type: run
+  name: task.3
+  script: /bin/echo task 3
+  docker:
+    image: alpine
+
+- type: run
+  name: task.4
+  script: /bin/echo task 4
+  docker:
+    image: alpine
