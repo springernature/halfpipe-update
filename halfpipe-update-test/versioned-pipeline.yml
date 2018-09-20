@@ -1,0 +1,196 @@
+resource_types:
+- name: cron-resource
+  type: docker-image
+  source:
+    repository: cftoolsmiths/cron-resource
+    
+resources:
+- name: timer
+  type: cron-resource
+  source:
+    expression: 0 * * * *
+- name: git
+  type: git
+  source:
+    private_key: ((github.private_key))
+    uri: git@github.com:springernature/halfpipe-docs.git
+- name: version
+  type: semver
+  version: 
+    number: 0.10.6
+  source:
+    branch: versions
+    driver: git
+    file: engineering-enablement-versioned-pipeline-test
+    private_key: ((github.private_key))
+    uri: git@github.com:springernature/halfpipe-pipeline-versions.git
+- name: golang
+  type: docker-image
+  source:
+    repository: golang
+    tag: 1.11-stretch
+
+
+jobs:
+- name: update
+  serial: true
+  plan:
+  - aggregate:
+    - get: git
+      trigger: true
+    - get: golang
+      trigger: true
+    - get: timer
+      trigger: true
+    - get: version
+      params:
+        bump: patch
+  - task: update pipeline
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          password: ((gcr.private_key))
+          repository: eu.gcr.io/halfpipe-io/halfpipe-auto-update
+          tag: latest
+          username: _json_key
+      params:
+        CONCOURSE_PASSWORD: ((concourse.password))
+        CONCOURSE_TEAM: ((concourse.team))
+        CONCOURSE_USERNAME: ((concourse.username))
+        PIPELINE_NAME: versioned-pipeline
+      run:
+        path: /bin/bash
+        args: 
+        - -cx
+        - |
+          fly -t ci sync
+          fly -t ${CONCOURSE_TEAM} login -c https://concourse.halfpipe.io -n ${CONCOURSE_TEAM} -u ${CONCOURSE_USERNAME} -p ${CONCOURSE_PASSWORD}
+          fly -t ${CONCOURSE_TEAM} gp -p ${PIPELINE_NAME} > /tmp/pipeline.yml
+          
+          #pin semver resource version to new version
+          sed "/^    number:/c\    number: $(cat ../version/version)" /tmp/pipeline.yml > /tmp/pipeline-updated.yml
+
+          #add another job (simulate halfpipe upload adding a job)
+          cat <<EOT >> /tmp/pipeline-updated.yml
+          - name: new job $(date +%s)
+            serial: true
+            plan:
+            - aggregate:
+              - get: git
+              - get: version
+                passed:
+                - deploy dev
+                trigger: true
+            - task: test
+              config:
+                platform: linux
+                image_resource:
+                  type: docker-image
+                  source:
+                    repository: golang
+                    tag: 1.11-stretch
+                run:
+                  path: /bin/sh
+                  args:
+                  - -cx
+                  - |
+                    go version
+                    cat ../version/version
+                  dir: git
+                inputs:
+                - name: git
+                - name: version
+          EOT
+          fly -t ${CONCOURSE_TEAM} sp -p ${PIPELINE_NAME} -c /tmp/pipeline-updated.yml -n
+        dir: git
+      inputs:
+      - name: git
+      - name: version
+  - put: version
+    params:
+      bump: patch
+
+- name: build
+  serial: true
+  plan:
+  - aggregate:
+    - get: git
+    - get: version
+      trigger: true
+  - task: test
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: golang
+          tag: 1.11-stretch
+      run:
+        path: /bin/sh
+        args:
+        - -cx
+        - |
+          go version
+          cat ../version/version
+        dir: git
+      inputs:
+      - name: git
+      - name: version
+- name: deploy dev
+  serial: true
+  plan:
+  - aggregate:
+    - get: git
+    - get: version
+      passed:
+      - build
+      trigger: true
+  - task: test
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: golang
+          tag: 1.11-stretch
+      run:
+        path: /bin/sh
+        args:
+        - -cx
+        - |
+          go version
+          cat ../version/version
+        dir: git
+      inputs:
+      - name: git
+      - name: version
+- name: deploy live
+  serial: true
+  plan:
+  - aggregate:
+    - get: git
+    - get: version
+      passed:
+      - deploy dev
+      trigger: true
+  - task: test
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: golang
+          tag: 1.11-stretch
+      run:
+        path: /bin/sh
+        args:
+        - -cx
+        - |
+          go version
+          cat ../version/version
+        dir: git
+      inputs:
+      - name: git
+      - name: version
