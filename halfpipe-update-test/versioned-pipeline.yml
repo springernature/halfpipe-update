@@ -17,11 +17,11 @@ resources:
 - name: version
   type: semver
   version: 
-    number: 0.10.10
+    number: 0.0.0
   source:
     branch: versions
     driver: git
-    file: engineering-enablement-versioned-pipeline-test
+    file: engineering-enablement-versioned-pipeline
     private_key: ((github.private_key))
     uri: git@github.com:springernature/halfpipe-pipeline-versions.git
 - name: golang
