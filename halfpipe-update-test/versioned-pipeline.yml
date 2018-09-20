@@ -17,7 +17,7 @@ resources:
 - name: version
   type: semver
   version: 
-    number: 0.10.6
+    number: 0.10.10
   source:
     branch: versions
     driver: git
@@ -74,7 +74,7 @@ jobs:
 
           #add another job (simulate halfpipe upload adding a job)
           cat <<EOT >> /tmp/pipeline-updated.yml
-          - name: new job $(date +%s)
+          - name: new job in version $(cat ../version/version)
             serial: true
             plan:
             - aggregate:
