@@ -142,7 +142,7 @@ jobs:
       inputs:
       - name: git
       - name: version
-- name: deploy live2
+- name: deploy live3
   serial: true
   plan:
   - aggregate:
