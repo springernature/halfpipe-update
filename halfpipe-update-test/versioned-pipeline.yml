@@ -72,7 +72,7 @@ jobs:
           fly -t ${CONCOURSE_TEAM} login -c https://concourse.halfpipe.io -n ${CONCOURSE_TEAM} -u ${CONCOURSE_USERNAME} -p ${CONCOURSE_PASSWORD}
 
           #update pipeline - pin semver resource version to new version
-          sed "/^    number:/c\    number: $(cat ../version/version)" versioned-pipeline.yml > /tmp/updated-pipeline.yml
+          sed "/^    number:/c\    number: $(cat ../../version/version)" versioned-pipeline.yml > /tmp/updated-pipeline.yml
 
           fly -t ${CONCOURSE_TEAM} sp -p ${PIPELINE_NAME} -c /tmp/updated-pipeline.yml -n
 
