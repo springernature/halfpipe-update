@@ -3,25 +3,28 @@ resource_types:
   type: docker-image
   source:
     repository: cftoolsmiths/cron-resource
-    
+
 resources:
 - name: timer
   type: cron-resource
   source:
-    expression: 0 * * * *
+    expression: 0 1 * * *
 - name: git
   type: git
   source:
+    paths:
+    - halfpipe-update-test
     private_key: ((github.private_key))
-    uri: git@github.com:springernature/halfpipe-docs.git
+    uri: git@github.com:springernature/halfpipe-update.git
 - name: version
   type: semver
-  version: 
-    number: 0.0.0
+  version:
+    number: 0.0.24
   source:
     branch: versions
     driver: git
     file: engineering-enablement-versioned-pipeline
+    initial_version: 0.0.1
     private_key: ((github.private_key))
     uri: git@github.com:springernature/halfpipe-pipeline-versions.git
 - name: golang
@@ -62,49 +65,18 @@ jobs:
         PIPELINE_NAME: versioned-pipeline
       run:
         path: /bin/bash
-        args: 
+        args:
         - -cx
         - |
           fly -t ci sync
           fly -t ${CONCOURSE_TEAM} login -c https://concourse.halfpipe.io -n ${CONCOURSE_TEAM} -u ${CONCOURSE_USERNAME} -p ${CONCOURSE_PASSWORD}
-          fly -t ${CONCOURSE_TEAM} gp -p ${PIPELINE_NAME} > /tmp/pipeline.yml
-          
-          #pin semver resource version to new version
-          sed "/^    number:/c\    number: $(cat ../version/version)" /tmp/pipeline.yml > /tmp/pipeline-updated.yml
 
-          #add another job (simulate halfpipe upload adding a job)
-          cat <<EOT >> /tmp/pipeline-updated.yml
-          - name: new job in version $(cat ../version/version)
-            serial: true
-            plan:
-            - aggregate:
-              - get: git
-              - get: version
-                passed:
-                - deploy dev
-                trigger: true
-            - task: test
-              config:
-                platform: linux
-                image_resource:
-                  type: docker-image
-                  source:
-                    repository: golang
-                    tag: 1.11-stretch
-                run:
-                  path: /bin/sh
-                  args:
-                  - -cx
-                  - |
-                    go version
-                    cat ../version/version
-                  dir: git
-                inputs:
-                - name: git
-                - name: version
-          EOT
-          fly -t ${CONCOURSE_TEAM} sp -p ${PIPELINE_NAME} -c /tmp/pipeline-updated.yml -n
-        dir: git
+          #update pipeline - pin semver resource version to new version
+          sed "/^    number:/c\    number: $(cat ../version/version)" versioned-pipeline.yml > /tmp/updated-pipeline.yml
+
+          fly -t ${CONCOURSE_TEAM} sp -p ${PIPELINE_NAME} -c /tmp/updated-pipeline.yml -n
+
+        dir: git/halfpipe-update-test
       inputs:
       - name: git
       - name: version
@@ -117,6 +89,8 @@ jobs:
   plan:
   - aggregate:
     - get: git
+      passed:
+      - update
     - get: version
       trigger: true
   - task: test
@@ -132,8 +106,8 @@ jobs:
         args:
         - -cx
         - |
-          go version
           cat ../version/version
+          cat .git/ref
         dir: git
       inputs:
       - name: git
@@ -143,6 +117,8 @@ jobs:
   plan:
   - aggregate:
     - get: git
+      passed:
+      - build
     - get: version
       passed:
       - build
@@ -160,8 +136,8 @@ jobs:
         args:
         - -cx
         - |
-          go version
           cat ../version/version
+          cat .git/ref
         dir: git
       inputs:
       - name: git
@@ -171,6 +147,8 @@ jobs:
   plan:
   - aggregate:
     - get: git
+      passed:
+      - deploy dev
     - get: version
       passed:
       - deploy dev
@@ -188,8 +166,8 @@ jobs:
         args:
         - -cx
         - |
-          go version
           cat ../version/version
+          cat .git/ref
         dir: git
       inputs:
       - name: git
