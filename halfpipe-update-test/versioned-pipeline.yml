@@ -19,7 +19,7 @@ resources:
 - name: version
   type: semver
   version:
-    number: 0.0.24
+    number: 0.0.25
   source:
     branch: versions
     driver: git
@@ -142,7 +142,7 @@ jobs:
       inputs:
       - name: git
       - name: version
-- name: deploy live
+- name: deploy live2
   serial: true
   plan:
   - aggregate:
