@@ -142,7 +142,37 @@ jobs:
       inputs:
       - name: git
       - name: version
-- name: deploy live3
+- name: deploy live
+  serial: true
+  plan:
+  - aggregate:
+    - get: git
+      passed:
+      - deploy dev
+    - get: version
+      passed:
+      - deploy dev
+      trigger: true
+  - task: test
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: golang
+          tag: 1.11-stretch
+      run:
+        path: /bin/sh
+        args:
+        - -cx
+        - |
+          cat ../version/version
+          cat .git/ref
+        dir: git
+      inputs:
+      - name: git
+      - name: version
+- name: deploy live 2
   serial: true
   plan:
   - aggregate:
