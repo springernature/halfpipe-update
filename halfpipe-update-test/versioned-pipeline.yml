@@ -232,3 +232,67 @@ jobs:
       inputs:
       - name: git
       - name: version
+- name: yolo
+  serial: true
+  plan:
+  - aggregate:
+    - get: git
+      passed:
+      - deploy live
+      - deploy live 2
+      - deploy live 3
+    - get: version
+      passed:
+      - deploy live
+      - deploy live 2
+      - deploy live 3
+      trigger: true
+  - task: test
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: golang
+          tag: 1.11-stretch
+      run:
+        path: /bin/sh
+        args:
+        - -cx
+        - |
+          cat ../version/version
+          cat .git/ref
+        dir: git
+      inputs:
+      - name: git
+      - name: version
+- name: yolo2
+  serial: true
+  plan:
+  - aggregate:
+    - get: git
+      passed:
+      - yolo
+    - get: version
+      passed:
+      - yolo
+      trigger: true
+  - task: test
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          repository: golang
+          tag: 1.11-stretch
+      run:
+        path: /bin/sh
+        args:
+        - -cx
+        - |
+          cat ../version/version
+          cat .git/ref
+        dir: git
+      inputs:
+      - name: git
+      - name: version
