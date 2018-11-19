@@ -3,12 +3,25 @@ resource_types:
   type: docker-image
   source:
     repository: cftoolsmiths/cron-resource
+- name: concourse-pipeline
+  type: docker-image
+  source:
+    repository: concourse/concourse-pipeline-resource
 
 resources:
 - name: timer
   type: cron-resource
   source:
     expression: 0 1 * * *
+- name: my-pipelines
+  type: concourse-pipeline
+  source:
+    target: https://concourse.halfpipe.io
+    insecure: "false"
+    teams:
+    - name: engineering-enablement
+      username: ((concourse.username))
+      password: ((concourse.password))
 - name: git
   type: git
   source:
@@ -68,22 +81,21 @@ jobs:
         args:
         - -cx
         - |
-          fly -t ci sync
-          fly -t ${CONCOURSE_TEAM} login -c https://concourse.halfpipe.io -n ${CONCOURSE_TEAM} -u ${CONCOURSE_USERNAME} -p ${CONCOURSE_PASSWORD}
-
-          #update pipeline - pin semver resource version to new version
-          sed "/^    number:/c\    number: $(cat ../../version/version)" versioned-pipeline.yml > /tmp/updated-pipeline.yml
-
-          fly -t ${CONCOURSE_TEAM} sp -p ${PIPELINE_NAME} -c /tmp/updated-pipeline.yml -n
+          halfpipe > ../pipeline/pipeline.yml
 
         dir: git/halfpipe-update-test
       inputs:
       - name: git
       - name: version
+      outputs:
+      - name: pipeline
   - put: version
     params:
       bump: patch
-
+  - put: my-pipelines
+    params:
+      pipelines_file: pipeline.yml
+    
 - name: build
   serial: true
   plan:
