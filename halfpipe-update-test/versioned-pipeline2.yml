@@ -59,6 +59,34 @@ jobs:
     - get: version
       params:
         bump: patch
+  - task: update pipeline
+    config:
+      platform: linux
+      image_resource:
+        type: docker-image
+        source:
+          password: ((gcr.private_key))
+          repository: eu.gcr.io/halfpipe-io/halfpipe-update
+          tag: latest
+          username: _json_key
+      params:
+        CONCOURSE_PASSWORD: ((concourse.password))
+        CONCOURSE_TEAM: ((concourse.team))
+        CONCOURSE_USERNAME: ((concourse.username))
+        PIPELINE_NAME: versioned-pipeline
+      run:
+        path: /bin/bash
+        args:
+        - -cx
+        - |
+          halfpipe > ../../pipeline/pipeline.yml
+
+        dir: git/halfpipe-update-test
+      inputs:
+      - name: git
+      - name: version
+      outputs:
+      - name: pipeline
   - put: version
     params:
       bump: patch
@@ -67,7 +95,7 @@ jobs:
       pipelines:
       - name: versioned-pipeline-test-michiel
         team: engineering-enablement
-        config_file: git/halfpipe-update-test/versioned-pipeline2.yml
+        config_file: pipeline/pipeline.yml
     
 - name: build
   serial: true
@@ -107,130 +135,6 @@ jobs:
     - get: version
       passed:
       - build
-      trigger: true
-  - task: test
-    config:
-      platform: linux
-      image_resource:
-        type: docker-image
-        source:
-          repository: golang
-          tag: 1.11-stretch
-      run:
-        path: /bin/sh
-        args:
-        - -cx
-        - |
-          cat ../version/version
-          cat .git/ref
-        dir: git
-      inputs:
-      - name: git
-      - name: version
-- name: deploy live
-  serial: true
-  plan:
-  - aggregate:
-    - get: git
-      passed:
-      - deploy dev
-    - get: version
-      passed:
-      - deploy dev
-      trigger: true
-  - task: test
-    config:
-      platform: linux
-      image_resource:
-        type: docker-image
-        source:
-          repository: golang
-          tag: 1.11-stretch
-      run:
-        path: /bin/sh
-        args:
-        - -cx
-        - |
-          cat ../version/version
-          cat .git/ref
-        dir: git
-      inputs:
-      - name: git
-      - name: version
-- name: deploy live 2
-  serial: true
-  plan:
-  - aggregate:
-    - get: git
-      passed:
-      - deploy dev
-    - get: version
-      passed:
-      - deploy dev
-      trigger: true
-  - task: test
-    config:
-      platform: linux
-      image_resource:
-        type: docker-image
-        source:
-          repository: golang
-          tag: 1.11-stretch
-      run:
-        path: /bin/sh
-        args:
-        - -cx
-        - |
-          cat ../version/version
-          cat .git/ref
-        dir: git
-      inputs:
-      - name: git
-      - name: version
-- name: deploy live 3
-  serial: true
-  plan:
-  - aggregate:
-    - get: git
-      passed:
-      - deploy dev
-    - get: version
-      passed:
-      - deploy dev
-      trigger: true
-  - task: test
-    config:
-      platform: linux
-      image_resource:
-        type: docker-image
-        source:
-          repository: golang
-          tag: 1.11-stretch
-      run:
-        path: /bin/sh
-        args:
-        - -cx
-        - |
-          cat ../version/version
-          cat .git/ref
-        dir: git
-      inputs:
-      - name: git
-      - name: version
-- name: yolo
-  serial: true
-  plan:
-  - aggregate:
-    - get: git
-      passed:
-      - deploy live
-      - deploy live 2
-      - deploy live 3
-    - get: version
-      passed:
-      - deploy live
-      - deploy live 2
-      - deploy live 3
       trigger: true
   - task: test
     config:
