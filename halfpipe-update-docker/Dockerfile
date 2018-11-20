@@ -13,6 +13,8 @@ RUN chmod +x /bin/fly
 RUN wget -O /bin/halfpipe "https://github.com/springernature/halfpipe/releases/download/1.52.1/halfpipe_linux_1.52.1"
 RUN chmod +x /bin/halfpipe
 
+RUN /bin/halfpipe sync
+
 # We need a ~/.flyrc with at least a api configured, otherwise fly sync cannot complete
 ADD .flyrc /root/.flyrc
 

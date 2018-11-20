@@ -31,12 +31,10 @@ resources:
     uri: git@github.com:springernature/halfpipe-update.git
 - name: version
   type: semver
-  version:
-    number: 0.0.25
   source:
     branch: versions
     driver: git
-    file: engineering-enablement-versioned-pipeline
+    file: engineering-enablement-versioned-pipeline-test-michiel
     initial_version: 0.0.1
     private_key: ((github.private_key))
     uri: git@github.com:springernature/halfpipe-pipeline-versions.git
@@ -81,7 +79,7 @@ jobs:
         args:
         - -cx
         - |
-          halfpipe > ../pipeline/pipeline.yml
+          halfpipe > ../../pipeline/pipeline.yml
 
         dir: git/halfpipe-update-test
       inputs:
@@ -94,7 +92,10 @@ jobs:
       bump: patch
   - put: my-pipelines
     params:
-      pipelines_file: pipeline.yml
+      pipelines:
+      - name: versioned-pipeline-test-michiel
+        team: engineering-enablement
+        config_file: pipeline/pipeline.yml
     
 - name: build
   serial: true
