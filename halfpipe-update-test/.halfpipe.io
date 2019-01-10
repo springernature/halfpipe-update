@@ -1,6 +1,8 @@
 team: engineering-enablement
 pipeline: halfpipe-update-test
-auto_update: true
+
+feature_toggles:
+- update-pipeline
 
 repo:
   watched_paths:
@@ -13,11 +15,11 @@ tasks:
     image: alpine
 
 - type: run
-  script: /bin/echo task 1
+  script: /bin/echo task 2
   docker:
     image: alpine
 
 - type: run
-  script: /bin/echo task 1
+  script: /bin/echo task 3
   docker:
     image: alpine
