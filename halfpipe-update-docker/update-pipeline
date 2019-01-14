@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+BUILD_VERSION=$(cat ../../version/version)
 
 echo "* Updating Pipeline to version ${BUILD_VERSION} .."
 [[ -f .halfpipe.io ]] && cat .halfpipe.io || cat .halfpipe.io.yml
