@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "STEP 1/5: Updating fly to latest version"
+echo "* Updating Pipeline to version ${BUILD_VERSION} .."
+[[ -f .halfpipe.io ]] && cat .halfpipe.io || cat .halfpipe.io.yml
+
+echo "* STEP 1/4: Updating fly to latest version"
 fly -t ci sync
 
-echo "STEP 2/5: Updating halfpipe to latest version"
+echo "* STEP 2/4: Updating halfpipe to latest version"
 halfpipe sync
 echo ""
 
-echo "STEP 3/5: Logging into concourse"
+echo "* STEP 3/4: Logging into concourse"
 fly -t ${CONCOURSE_TEAM} login -c https://concourse.halfpipe.io -n ${CONCOURSE_TEAM} -u ${CONCOURSE_USERNAME} -p ${CONCOURSE_PASSWORD}
 
-echo "STEP 4/5: View Halfpipe File"
-[[ -f .halfpipe.io ]] && cat .halfpipe.io || cat .halfpipe.io.yml
-
-echo "STEP 5/5: Updating pipeline"
+echo "* STEP 4/4: Updating pipeline"
 halfpipe upload -n
 
-echo "Finished"
+echo "* Finished"
