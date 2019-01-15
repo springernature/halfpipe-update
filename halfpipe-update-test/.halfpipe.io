@@ -11,7 +11,7 @@ repo:
 tasks:
 - type: run
   name: task 1
-  script: \env && echo $GIT_REVISION > git-rev
+  script: \env && echo git revision is $GIT_REVISION > git-rev
   save_artifacts:
   - git-rev
   docker:
