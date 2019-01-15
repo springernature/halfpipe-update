@@ -25,7 +25,7 @@ tasks:
     image: alpine
 
 - type: run
-  name: task 3
+  name: task 4
   script: \env && echo content of artifact file = && cat git-rev
   restore_artifacts: true
   docker:
