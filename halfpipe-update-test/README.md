@@ -1,4 +1,4 @@
-example auto-updating pipeline
+## example auto-updating pipeline
 
 ```
 feature_toggles:
