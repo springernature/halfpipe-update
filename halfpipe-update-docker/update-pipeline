@@ -1,21 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
 BUILD_VERSION=$(cat ../../version/version)
+CONCOURSE_URL="https://concourse.halfpipe.io"
 
 echo "* Updating Pipeline to version ${BUILD_VERSION} .."
 [[ -f .halfpipe.io ]] && cat .halfpipe.io || cat .halfpipe.io.yml
 
-echo "* STEP 1/4: Updating fly to latest version"
+echo
+echo "* STEP 1/5: Updating fly to latest version"
 fly -t ci sync
 
-echo "* STEP 2/4: Updating halfpipe to latest version"
+echo
+echo "* STEP 2/5: Updating halfpipe to latest version"
 halfpipe sync
-echo ""
 
-echo "* STEP 3/4: Logging into concourse"
-fly -t ${CONCOURSE_TEAM} login -c https://concourse.halfpipe.io -n ${CONCOURSE_TEAM} -u ${CONCOURSE_USERNAME} -p ${CONCOURSE_PASSWORD}
+echo
+echo "* STEP 3/5: Logging into concourse"
+fly -t ${CONCOURSE_TEAM} login -c ${CONCOURSE_URL} -n ${CONCOURSE_TEAM} -u ${CONCOURSE_USERNAME} -p ${CONCOURSE_PASSWORD}
 
-echo "* STEP 4/4: Updating pipeline"
+echo
+echo "* STEP 4/5: Disable all existing versions"
+AUTH="Authorization: Bearer$(grep 'value: ' ~/.flyrc | cut -d: -f2)"
+VERSION_URL="${CONCOURSE_URL}/api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions"
+VERSION_IDS=$(curl -H "${AUTH}" ${VERSION_URL} | jq -r 'map(select(.enabled))[].id')
+for ID in $VERSION_IDS; do
+  echo "disabling version id ${ID}"
+  curl -sH "${AUTH}" -X PUT ${VERSION_URL}/${ID}/disable
+done
+
+echo
+echo "* STEP 5/5: Updating pipeline"
 halfpipe upload -n
 
+echo
 echo "* Finished"

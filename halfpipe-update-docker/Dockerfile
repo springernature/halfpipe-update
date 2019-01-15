@@ -1,9 +1,6 @@
 FROM alpine
 
-RUN apk --no-cache add wget
-RUN apk --no-cache add ca-certificates
-RUN apk --no-cache add bash
-RUN apk --no-cache add git
+RUN apk --no-cache add wget ca-certificates bash git jq curl
 
 # Just get a random Fly version. We will sync in the script later
 RUN wget -O /bin/fly "https://concourse.halfpipe.io/api/v1/cli?arch=amd64&platform=linux"
