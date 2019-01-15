@@ -5,17 +5,18 @@ feature_toggles:
 - update-pipeline
 
 repo:
-  uri: https://github.com/springernature/halfpipe-update.git
   watched_paths:
   - halfpipe-update-test
 
 tasks:
 - type: run
-  script: /bin/echo task 1
+  name: task 1
+  script: \env
   docker:
     image: alpine
 
 - type: run
-  script: /bin/echo task 2a
+  name: task 2
+  script: \env
   docker:
     image: alpine
