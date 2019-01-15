@@ -18,21 +18,7 @@ tasks:
     image: alpine
 
 - type: run
-  name: task 2
-  script: \env && echo content of artifact file = && cat git-rev
-  restore_artifacts: true
-  docker:
-    image: alpine
-
-- type: run
-  name: task 4
-  script: \env && echo content of artifact file = && cat git-rev
-  restore_artifacts: true
-  docker:
-    image: alpine
-
-- type: run
-  name: task 5
+  name: task two
   script: \env && echo content of artifact file = && cat git-rev
   restore_artifacts: true
   docker:
