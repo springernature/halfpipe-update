@@ -23,10 +23,10 @@ echo
 echo "* STEP 4/5: Disable all existing versions"
 AUTH="Authorization: Bearer$(grep 'value: ' ~/.flyrc | cut -d: -f2)"
 VERSION_URL="${CONCOURSE_URL}/api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions"
-VERSION_IDS=$(curl -sH "${AUTH}" ${VERSION_URL} | jq -r 'map(select(.enabled)) | .[1:][].id')
+VERSION_IDS=$(curl -sSH "${AUTH}" ${VERSION_URL} | jq -r 'map(select(.enabled)) | .[1:][].id')
 for ID in $VERSION_IDS; do
   echo "disabling version id ${ID}"
-  curl -sH "${AUTH}" -X PUT ${VERSION_URL}/${ID}/disable
+  curl -sSH "${AUTH}" -X PUT ${VERSION_URL}/${ID}/disable
 done
 
 echo
