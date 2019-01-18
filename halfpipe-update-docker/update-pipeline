@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
-BUILD_VERSION=$(cat ../../version/version)
 CONCOURSE_URL="https://concourse.halfpipe.io"
 
-echo "* Updating Pipeline to version ${BUILD_VERSION} .."
+echo "* Halfpipe manifest:"
 [[ -f .halfpipe.io ]] && cat .halfpipe.io || cat .halfpipe.io.yml
 
 echo
