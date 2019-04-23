@@ -7,7 +7,7 @@ RUN wget -O /bin/fly "https://concourse.halfpipe.io/api/v1/cli?arch=amd64&platfo
 RUN chmod +x /bin/fly
 
 # Just get a random Halfpipe version. We will sync in the script later
-RUN wget -O /bin/halfpipe "https://github.com/springernature/halfpipe/releases/download/1.52.1/halfpipe_linux_1.52.1"
+RUN wget -O /bin/halfpipe "https://github.com/springernature/halfpipe/releases/download/3.0.1/halfpipe_linux_3.0.1"
 RUN chmod +x /bin/halfpipe
 
 RUN /bin/halfpipe sync
