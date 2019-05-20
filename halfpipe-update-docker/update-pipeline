@@ -2,6 +2,7 @@
 set -euo pipefail
 CONCOURSE_URL="https://concourse.halfpipe.io"
 ENABLE_VERSION_PINNING=${ENABLE_VERSION_PINNING:-"false"}
+BUILD_VERSION="${BUILD_VERSION:=$(cat ${PWD//\/git*/\/version\/version})}"
 
 echo "* Halfpipe manifest:"
 [[ -f .halfpipe.io ]] && cat .halfpipe.io || cat .halfpipe.io.yml
