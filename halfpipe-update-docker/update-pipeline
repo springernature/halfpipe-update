@@ -3,6 +3,8 @@ set -euo pipefail
 CONCOURSE_URL="https://concourse.halfpipe.io"
 ENABLE_VERSION_PINNING="false" && [ "${CONCOURSE_TEAM}" == "engineering-enablement" ] && ENABLE_VERSION_PINNING="true"
 BUILD_VERSION="${BUILD_VERSION:=$(cat ${PWD//\/git*/\/version\/version})}"
+GIT_PATH="${PWD//\/git*/\/git\/.git\/}"
+PIN_COMMENT="$(cat ${GIT_PATH}short_ref) $(cat ${GIT_PATH}commit_message) ($(cat ${GIT_PATH}committer))"
 
 echo "* Halfpipe manifest:"
 [[ -f .halfpipe.io ]] && cat .halfpipe.io || cat .halfpipe.io.yml
@@ -36,6 +38,7 @@ if [ "${ENABLE_VERSION_PINNING}" == "true" ]; then
   fi
   fly -t ${CONCOURSE_TEAM} curl /api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/unpin -- -X PUT
   fly -t ${CONCOURSE_TEAM} curl /api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions/${CURRENT_VERSION_ID}/pin -- -X PUT
+  fly -t ${CONCOURSE_TEAM} curl /api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/pin_comment -- -X PUT -d "{\"pin_comment\":\"${PIN_COMMENT//\"/}\"}" -H 'Content-Type: application/json'
   echo "Pinned Version: number=${BUILD_VERSION} id=${CURRENT_VERSION_ID}"
 else
   echo "* STEP 5/7: Disable all existing enabled versions"
