@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 CONCOURSE_URL="https://concourse.halfpipe.io"
+ENABLE_VERSION_PINNING=${ENABLE_VERSION_PINNING:-"false"}
 
 echo "* Halfpipe manifest:"
 [[ -f .halfpipe.io ]] && cat .halfpipe.io || cat .halfpipe.io.yml
@@ -19,33 +20,57 @@ echo "* STEP 3/7: Logging into concourse"
 fly -t ${CONCOURSE_TEAM} login -c ${CONCOURSE_URL} -n ${CONCOURSE_TEAM} -u ${CONCOURSE_USERNAME} -p ${CONCOURSE_PASSWORD}
 
 echo
-echo "* STEP 4/7: Check pipeline exists named ${PIPELINE_NAME}"
+echo "* STEP 4/7: Checking pipeline exists named ${PIPELINE_NAME}"
 # exits -1 if pipeline not found. We only want to update an existing pipeine, not create a new one.
 fly -t ${CONCOURSE_TEAM} builds -p ${PIPELINE_NAME} -c 1
 
 echo
-echo "* STEP 5/7: Disable all existing enabled versions"
-AUTH="Authorization: Bearer$(grep 'value: ' ~/.flyrc | cut -d: -f2)"
-VERSION_URL="${CONCOURSE_URL}/api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions"
-VERSION_IDS=$(curl -sSH "${AUTH}" ${VERSION_URL} | jq -r 'map(select(.enabled)) | .[1:][].id')
-for ID in $VERSION_IDS; do
-  echo "disabling version id ${ID}"
-  curl -sSH "${AUTH}" -X PUT ${VERSION_URL}/${ID}/disable
-done
+
+if [ "${ENABLE_VERSION_PINNING}" == "true" ]; then
+  echo "* STEP 5/7: Pinning current version"
+  CURRENT_VERSION_ID=$(fly -t ${CONCOURSE_TEAM} curl /api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions | jq -r "map(select(.version.number == \"${BUILD_VERSION}\")) | .[].id")
+  if [ -z "${CURRENT_VERSION_ID}" ]; then
+    echo "Error getting current version id"
+    exit 1
+  fi
+  fly -t ${CONCOURSE_TEAM} curl /api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/unpin -- -X PUT
+  fly -t ${CONCOURSE_TEAM} curl /api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions/${CURRENT_VERSION_ID}/pin -- -X PUT
+  echo "Pinned Version: number=${BUILD_VERSION} id=${CURRENT_VERSION_ID}"
+else
+  echo "* STEP 5/7: Disable all existing enabled versions"
+  AUTH="Authorization: Bearer$(grep 'value: ' ~/.flyrc | cut -d: -f2)"
+  VERSION_URL="${CONCOURSE_URL}/api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions"
+  VERSION_IDS=$(curl -sSH "${AUTH}" ${VERSION_URL} | jq -r 'map(select(.enabled)) | .[1:][].id')
+  for ID in $VERSION_IDS; do
+    echo "disabling version id ${ID}"
+    curl -sSH "${AUTH}" -X PUT ${VERSION_URL}/${ID}/disable
+  done
+fi
 
 echo
 echo "* STEP 6/7: Updating pipeline"
 halfpipe upload -n | tee /tmp/o
 
 echo
-echo "* STEP 7/7: Re-enable existing versions if pipeline has not changed"
-if grep -q 'configuration updated' /tmp/o; then 
-  echo 'skipping because pipeline has changed'
+
+if [ "${ENABLE_VERSION_PINNING}" == "true" ]; then
+  echo "* STEP 7/7: Unpinning if pipeline has not changed"
+  if grep -q 'configuration updated' /tmp/o; then
+    echo 'Leaving current version pinned because pipeline definition has changed'
+  else
+    fly -t ${CONCOURSE_TEAM} curl /api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/unpin -- -X PUT
+    echo "Unpinned"
+fi
 else
-  for ID in $VERSION_IDS; do
-    echo "enabling version id ${ID}"
-    curl -sSH "${AUTH}" -X PUT ${VERSION_URL}/${ID}/enable
-  done
+  echo "* STEP 7/7: Re-enable existing versions if pipeline has not changed"
+  if grep -q 'configuration updated' /tmp/o; then
+    echo 'skipping because pipeline has changed'
+  else
+    for ID in $VERSION_IDS; do
+      echo "enabling version id ${ID}"
+      curl -sSH "${AUTH}" -X PUT ${VERSION_URL}/${ID}/enable
+    done
+  fi
 fi
 
 echo
