@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
-CONCOURSE_URL="https://concourse.halfpipe.io"
+CONCOURSE_URL="${CONCOURSE_URL:=https://concourse.halfpipe.io}"
 ENABLE_VERSION_PINNING="false" && [ "${CONCOURSE_TEAM}" == "engineering-enablement" ] && ENABLE_VERSION_PINNING="true"
 BUILD_VERSION="${BUILD_VERSION:=$(cat ${PWD//\/git*/\/version\/version})}"
 GIT_PATH="${PWD//\/git*/\/git\/.git\/}"
