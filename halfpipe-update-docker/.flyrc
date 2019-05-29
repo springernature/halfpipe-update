@@ -1,3 +1,0 @@
-targets:
-  ci:
-    api: https://concourse.halfpipe.io

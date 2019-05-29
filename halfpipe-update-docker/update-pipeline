@@ -11,6 +11,11 @@ echo "* Halfpipe manifest:"
 
 echo
 echo "* STEP 1/7: Updating fly to latest version"
+cat >/root/.flyrc << EOF
+targets:
+  ci:
+    api: ${CONCOURSE_URL}
+EOF
 fly -t ci sync
 
 echo
