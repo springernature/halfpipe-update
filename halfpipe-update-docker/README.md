@@ -19,6 +19,6 @@ See <https://docs.halfpipe.io> for more info on using it.
 
 6. Run `halfpipe upload` to update the pipeline based on the `.halfpipe.io` file in the git repo.
 
-7. If we just changed the pipeline, we pin the `version` resource to the current version. This prevents any new jobs triggering with the previous version.
+7. If we just changed the pipeline, we disable all older versions. This prevents any new jobs triggering with a previous version.
 
 8. Unpause the pipeline

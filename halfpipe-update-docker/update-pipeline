@@ -4,7 +4,7 @@ export CONCOURSE_URL="${CONCOURSE_URL:=https://concourse.halfpipe.io}"
 export HALFPIPE_PROJECT="${HALFPIPE_PROJECT:=halfpipe-io}"
 export HALFPIPE_DOMAIN="${HALFPIPE_DOMAIN:=halfpipe.io}"
 
-ENABLE_VERSION_PINNING="false" && [ "${CONCOURSE_TEAM}" == "engineering-enablement" ] && ENABLE_VERSION_PINNING="true"
+ENABLE_BETA="false" && [ "${CONCOURSE_TEAM}" == "engineering-enablement" ] && ENABLE_BETA="true"
 
 BUILD_VERSION="${BUILD_VERSION:=$(cat ${PWD//\/git*/\/version\/version})}"
 GIT_PATH="${PWD//\/git*/\/git\/.git\/}"
@@ -42,7 +42,7 @@ else
   echo "found '${PIPELINE_NAME}'. paused = ${PIPELINE_IS_PAUSED}".
 fi
 
-if [ "${ENABLE_VERSION_PINNING}" == "true" ]; then
+if [ "${ENABLE_BETA}" == "true" ]; then
   echo
   echo "* STEP 5/7: Pausing pipeline"
   fly -t ${CONCOURSE_TEAM} pause-pipeline -p ${PIPELINE_NAME}
@@ -52,17 +52,16 @@ if [ "${ENABLE_VERSION_PINNING}" == "true" ]; then
   halfpipe upload -n | tee /tmp/o
 
   echo
-  echo "* STEP 7/7: Pinning latest version if pipeline has changed"
+  echo "* STEP 7/7: Disabling old versions if pipeline has changed"
   if grep -q 'configuration updated' /tmp/o; then
-    CURRENT_VERSION_ID=$(fly -t ${CONCOURSE_TEAM} curl /api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions -- -sS | jq -r "map(select(.version.number == \"${BUILD_VERSION}\")) | .[].id")
-    if [ -z "${CURRENT_VERSION_ID}" ]; then
-      echo "error getting current version id"
-      exit 1
-    fi
-    fly -t ${CONCOURSE_TEAM} curl /api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/unpin -- -X PUT -sS
-    fly -t ${CONCOURSE_TEAM} curl /api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions/${CURRENT_VERSION_ID}/pin -- -X PUT -sS
-    fly -t ${CONCOURSE_TEAM} curl /api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/pin_comment -- -sS -X PUT -d "{\"pin_comment\":\"${PIN_COMMENT//\"/}\"}" -H 'Content-Type: application/json'
-    echo "pinned Version: number=${BUILD_VERSION} id=${CURRENT_VERSION_ID}"
+    VERSIONS_ENDPOINT="/api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions"
+    VERSION_IDS=$(fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT} -- -sS | jq -r 'map(select(.enabled and .version.number != "0.212.0")) | .[].id')
+    for ID in $VERSION_IDS; do
+      if [ "${ID}" != "${CURRENT_VERSION_ID}" ]; then
+        echo "disabling version id ${ID}"
+        fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT}/${ID}/disable -- -X PUT -sS
+      fi
+    done
   else
     echo 'skipping because pipeline has not changed'
   fi
@@ -75,7 +74,7 @@ if [ "${ENABLE_VERSION_PINNING}" == "true" ]; then
     echo "skipping because pipeline was already paused before update started"
   fi
 
-else   # ENABLE_VERSION_PINNING=false
+else   # ENABLE_BETA=false
   echo
   echo "* STEP 5/7: Disable all existing enabled versions"
   AUTH="Authorization: Bearer$(grep 'value: ' ~/.flyrc | cut -d: -f2)"
