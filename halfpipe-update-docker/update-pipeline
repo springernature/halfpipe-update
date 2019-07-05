@@ -55,12 +55,10 @@ if [ "${ENABLE_BETA}" == "true" ]; then
   echo "* STEP 7/7: Disabling old versions if pipeline has changed"
   if grep -q 'configuration updated' /tmp/o; then
     VERSIONS_ENDPOINT="/api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions"
-    VERSION_IDS=$(fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT} -- -sS | jq -r 'map(select(.enabled and .version.number != "0.212.0")) | .[].id')
+    VERSION_IDS=$(fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT} -- -sS | jq -r "map(select(.enabled and .version.number != \"${BUILD_VERSION}\")) | .[].id")
     for ID in $VERSION_IDS; do
-      if [ "${ID}" != "${CURRENT_VERSION_ID}" ]; then
-        echo "disabling version id ${ID}"
-        fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT}/${ID}/disable -- -X PUT -sS
-      fi
+      echo "disabling version id ${ID}"
+      fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT}/${ID}/disable -- -X PUT -sS
     done
   else
     echo 'skipping because pipeline has not changed'
