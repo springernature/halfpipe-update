@@ -2,7 +2,9 @@
 
 This repo builds a docker image which is designed to be used in a concourse task to self-update a pipeline.
 
-See <https://docs.halfpipe.io> for more info on using it.
+It ensure the pipeline configuration in Concourse matches the halfpipe file in the current git revision.
+
+See <https://docs.halfpipe.io/auto-updating-pipelines/> for more info on using it.
 
 
 ### How it works
@@ -13,12 +15,14 @@ See <https://docs.halfpipe.io> for more info on using it.
 
 3. Login to concourse.
 
-4. Check pipeline already exists. Obviously it should as it is running inside the pipeline - something is wrong otherwise.
+4. Check if pipeline already exists. Obviously it should as it is running inside the pipeline - something is wrong otherwise, so exit (error).
 
-5. Pause the pipeline. We might be about to change the pipeline, so stop new builds triggering until we're finished.
+5. Run `halfpipe` to generate Concourse pipeline
 
-6. Run `halfpipe upload` to update the pipeline based on the `.halfpipe.io` file in the git repo.
+6. Check if pipeline has changed. Exit (success) if there are no changes.
 
-7. If we just changed the pipeline, disable all older versions. This prevents any new jobs triggering immediately with a previous version.
+If the pipeline has changed:
 
-8. Unpause the pipeline.
+7. Disable all versions except the current version. This prevents any new jobs we are about to create from triggering immediately with a previous version.
+
+8. Update the pipeline.
