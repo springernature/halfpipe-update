@@ -1,6 +1,7 @@
 team: engineering-enablement
 pipeline: halfpipe-update-docker
 slack_channel: "#halfpipe-team"
+cron_trigger: "0 3 * * *"
 
 feature_toggles:
 - update-pipeline
