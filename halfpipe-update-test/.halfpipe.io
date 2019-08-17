@@ -10,23 +10,6 @@ repo:
 
 tasks:
 - type: run
-  name: task 1
-  script: \env && echo $GIT_REVISION > git-rev
-  save_artifacts:
-  - git-rev
-  docker:
-    image: alpine
-
-- type: run
-  name: task too
-  script: \env && echo content of artifact file = && cat git-rev
-  restore_artifacts: true
-  docker:
-    image: alpine
-
-- type: run
-  name: task 2.1
-  script: \env && echo content of artifact file = && cat git-rev
-  restore_artifacts: true
+  script: \env
   docker:
     image: alpine
