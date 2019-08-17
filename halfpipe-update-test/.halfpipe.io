@@ -10,6 +10,7 @@ repo:
 
 tasks:
 - type: run
+  name: run1
   script: \env
   docker:
     image: alpine
