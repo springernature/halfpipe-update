@@ -23,6 +23,6 @@ See <https://docs.halfpipe.io/auto-updating-pipelines/> for more info on using i
 
 If the pipeline has changed:
 
-7. Disable all versions except the current version. This prevents any new jobs we are about to create from triggering immediately with a previous version.
+7. Check if any new jobs have been added. If so, disable all existing versions. This prevents the new jobs triggering immediately with the previous version.
 
 8. Update the pipeline.
