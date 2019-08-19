@@ -1,10 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ "${CONCOURSE_TEAM}" == "engineering-enablement" ]; then
-  echo "running update-pipeline-beta"
-  update-pipeline-beta
-else  
-  echo "running update-pipeline-stable"
-  update-pipeline-stable
-fi
+echo "running update-pipeline-v1"
+update-pipeline-v1

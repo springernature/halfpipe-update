@@ -60,7 +60,7 @@ fi
 
 
 echo
-echo "* STEP 7/8: Disabling old versions"
+echo "* STEP 7/8: Disabling old versions if required"
 if grep -Eo 'job.+has been added' ${SET_PIPELINE_OUTPUT}; then
   VERSIONS_ENDPOINT="/api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions"
   VERSION_IDS=$(fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT} -- -sS | jq -r "map(select(.enabled and .version.number != \"${BUILD_VERSION}\")) | .[].id")

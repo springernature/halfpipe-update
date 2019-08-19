@@ -4,9 +4,8 @@ set -euo pipefail
 CONCOURSE_URL="${CONCOURSE_URL:=https://concourse.halfpipe.io}"
 HALFPIPE_PROJECT="${HALFPIPE_PROJECT:=halfpipe-io}"
 HALFPIPE_DOMAIN="${HALFPIPE_DOMAIN:=halfpipe.io}"
-BUILD_VERSION="${BUILD_VERSION:=$(cat ${PWD//\/git*/\/version\/version})}"
 PIPELINE_CONFIG="/tmp/pipeline.yml"
-
+SET_PIPELINE_OUTPUT="/tmp/set-pipeline-output"
 
 echo
 echo "* Halfpipe manifest:"
@@ -50,22 +49,32 @@ halfpipe > ${PIPELINE_CONFIG}
 
 echo
 echo "* STEP 6/8: Checking if pipeline has changed"
-echo | fly -t ${CONCOURSE_TEAM} set-pipeline -p ${PIPELINE_NAME} -c ${PIPELINE_CONFIG} |
-  grep 'no changes to apply' &&
-  exit 0 ||
+echo | fly -t ${CONCOURSE_TEAM} set-pipeline -p ${PIPELINE_NAME} -c ${PIPELINE_CONFIG} > ${SET_PIPELINE_OUTPUT}
+if grep 'no changes to apply' ${SET_PIPELINE_OUTPUT}; then
+  echo "finished!"
+  exit 0
+else 
   echo "found changes to apply"
+fi
 
 
 echo
-echo "* STEP 7/8: Disabling old versions"
-VERSIONS_ENDPOINT="/api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions"
-VERSION_IDS=$(fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT} -- -sS | jq -r "map(select(.enabled and .version.number != \"${BUILD_VERSION}\")) | .[].id")
-for ID in $VERSION_IDS; do
-  echo "disabling version id ${ID}"
-  fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT}/${ID}/disable -- -X PUT -sS
-done
+echo "* STEP 7/8: Disabling old versions if required"
+if grep -Eo 'job.+has been added' ${SET_PIPELINE_OUTPUT}; then
+  VERSIONS_ENDPOINT="/api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions"
+  VERSION_IDS=$(fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT} -- -sS | jq -r "map(select(.enabled)) | .[].id")
+  for ID in $VERSION_IDS; do
+    echo "disabling version id ${ID}"
+    fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT}/${ID}/disable -- -X PUT -sS
+  done
+else
+  echo "no jobs added. skipping"
+fi
 
 
 echo
 echo "* STEP 8/8: Updating pipeline"
 fly -t ${CONCOURSE_TEAM} set-pipeline -p ${PIPELINE_NAME} -c ${PIPELINE_CONFIG} --check-creds --non-interactive
+
+echo
+echo "finished!"
