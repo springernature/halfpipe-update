@@ -6,9 +6,10 @@ echo "running update-pipeline"
 CONCOURSE_URL="${CONCOURSE_URL:-https://concourse.halfpipe.io}"
 HALFPIPE_PROJECT="${HALFPIPE_PROJECT:-halfpipe-io}"
 HALFPIPE_DOMAIN="${HALFPIPE_DOMAIN:-halfpipe.io}"
-BUILD_VERSION="${BUILD_VERSION:-$(cat ${PWD//\/git*/\/version\/version})}"
+BUILD_VERSION="$(cat ${PWD//\/git*/\/version\/version} 2> /dev/null || echo 'NOT_PROVIDED')"
 PIPELINE_CONFIG="/tmp/pipeline.yml"
 SET_PIPELINE_OUTPUT="/tmp/set-pipeline-output"
+
 
 echo
 echo "* Halfpipe manifest:"
@@ -62,7 +63,7 @@ fi
 
 
 echo
-echo "* STEP 7/8: Disabling old versions if required"
+echo "* STEP 7/8: Disabling old versions if new jobs added"
 if grep -Eo 'job.+has been added' ${SET_PIPELINE_OUTPUT}; then
   VERSIONS_ENDPOINT="/api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions"
   VERSION_IDS=$(fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT} -- -sS | jq -r "map(select(.enabled and .version.number != \"${BUILD_VERSION}\")) | .[].id")
@@ -71,7 +72,7 @@ if grep -Eo 'job.+has been added' ${SET_PIPELINE_OUTPUT}; then
     fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT}/${ID}/disable -- -X PUT -sS
   done
 else
-  echo "no jobs added. skipping"
+  echo "no jobs added"
 fi
 
 

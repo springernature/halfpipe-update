@@ -11,8 +11,8 @@ export CONCOURSE_PASSWORD=$(vault read -field=password springernature/engineerin
 )
 
 docker run -it --rm \
-  -v "${PWD}/..":/work \
-  -w /work/halfpipe-update-test \
+  -v "${PWD}/..":/tmp/job/git \
+  -w /tmp/job/git/halfpipe-update-test \
   -e PIPELINE_NAME \
   -e CONCOURSE_TEAM \
   -e CONCOURSE_USERNAME \

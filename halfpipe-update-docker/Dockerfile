@@ -18,4 +18,3 @@ RUN curl -Lo /bin/halfpipe "https://github.com/springernature/halfpipe/releases/
     && halfpipe sync
 
 ADD update-pipeline* /bin/
-ADD halfpipe-dev /bin/
