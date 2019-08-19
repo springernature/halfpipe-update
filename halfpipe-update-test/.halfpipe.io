@@ -21,4 +21,4 @@ tasks:
   docker:
     image: alpine
   vars:
-    FOO: foo1
+    FOO: foo2
