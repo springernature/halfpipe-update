@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-CONCOURSE_URL="${CONCOURSE_URL:=https://concourse.halfpipe.io}"
-HALFPIPE_PROJECT="${HALFPIPE_PROJECT:=halfpipe-io}"
-HALFPIPE_DOMAIN="${HALFPIPE_DOMAIN:=halfpipe.io}"
+CONCOURSE_URL="${CONCOURSE_URL:-https://concourse.halfpipe.io}"
+HALFPIPE_PROJECT="${HALFPIPE_PROJECT:-halfpipe-io}"
+HALFPIPE_DOMAIN="${HALFPIPE_DOMAIN:-halfpipe.io}"
 PIPELINE_CONFIG="/tmp/pipeline.yml"
 SET_PIPELINE_OUTPUT="/tmp/set-pipeline-output"
+SYNC_FLY_AND_HALFPIPE="${SYNC_FLY_AND_HALFPIPE:-true}"
 
 echo
 echo "* Halfpipe manifest:"
@@ -14,19 +15,22 @@ cat .halfpipe.io*
 
 echo
 echo "* STEP 1/8: Updating fly to latest version"
-cat >/root/.flyrc << EOF
-targets:
-  ci:
-    api: ${CONCOURSE_URL}
+if [ "${SYNC_FLY_AND_HALFPIPE}" == "true" ]; then 
+  cat >/root/.flyrc << EOF
+  targets:
+    ci:
+      api: ${CONCOURSE_URL}
 EOF
-fly -t ci sync
+  fly -t ci sync
+fi
 
 
 echo
 echo "* STEP 2/8: Updating halfpipe to latest version"
-halfpipe sync
-echo
-
+if [ "${SYNC_FLY_AND_HALFPIPE}" == "true" ]; then 
+  halfpipe sync
+  echo
+fi
 
 echo
 echo "* STEP 3/8: Logging into concourse"
