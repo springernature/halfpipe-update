@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+echo "running update-pipeline-v2"
+
 CONCOURSE_URL="${CONCOURSE_URL:-https://concourse.halfpipe.io}"
 HALFPIPE_PROJECT="${HALFPIPE_PROJECT:-halfpipe-io}"
 HALFPIPE_DOMAIN="${HALFPIPE_DOMAIN:-halfpipe.io}"
 PIPELINE_CONFIG="/tmp/pipeline.yml"
 SET_PIPELINE_OUTPUT="/tmp/set-pipeline-output"
-SYNC_FLY_AND_HALFPIPE="${SYNC_FLY_AND_HALFPIPE:-true}"
+
+HALFPIPE_COMMAND="halfpipe-dev"
+
 
 echo
 echo "* Halfpipe manifest:"
@@ -15,22 +19,20 @@ cat .halfpipe.io*
 
 echo
 echo "* STEP 1/8: Updating fly to latest version"
-if [ "${SYNC_FLY_AND_HALFPIPE}" == "true" ]; then 
-  cat >/root/.flyrc << EOF
+cat >/root/.flyrc << EOF
   targets:
     ci:
       api: ${CONCOURSE_URL}
 EOF
   fly -t ci sync
-fi
+
 
 
 echo
 echo "* STEP 2/8: Updating halfpipe to latest version"
-if [ "${SYNC_FLY_AND_HALFPIPE}" == "true" ]; then 
-  halfpipe sync
-  echo
-fi
+# ${HALFPIPE_COMMAND} sync
+echo
+
 
 echo
 echo "* STEP 3/8: Logging into concourse"
@@ -48,7 +50,7 @@ fi
 
 echo
 echo "* STEP 5/8: Running halfpipe to generate Concourse pipeline"
-halfpipe > ${PIPELINE_CONFIG}
+${HALFPIPE_COMMAND} > ${PIPELINE_CONFIG}
 
 
 echo

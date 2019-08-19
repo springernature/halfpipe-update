@@ -16,7 +16,7 @@ tasks:
     image: alpine
 
 - type: run
-  name: run4
+  name: run5
   script: \env
   docker:
     image: alpine
