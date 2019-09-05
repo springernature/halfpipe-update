@@ -1,14 +1,16 @@
 team: engineering-enablement
 pipeline: halfpipe-update-docker
 slack_channel: "#halfpipe-alerts"
-cron_trigger: "0 3 * * *"
 
 feature_toggles:
 - update-pipeline
 
-repo:
+triggers:
+- type: git
   watched_paths:
   - halfpipe-update-docker
+- type: timer
+  cron: "0 3 * * *"
 
 tasks:
 - type: docker-push

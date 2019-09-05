@@ -4,7 +4,8 @@ pipeline: halfpipe-update-test
 feature_toggles:
 - update-pipeline
 
-repo:
+triggers:
+- type: git
   watched_paths:
   - halfpipe-update-test
 
