@@ -11,6 +11,9 @@ triggers:
   - halfpipe-update-docker
 - type: timer
   cron: "0 3 * * *"
+- type: pipeline
+  pipeline: halfpipe-cli
+  job: Release
 
 tasks:
 - type: docker-push
