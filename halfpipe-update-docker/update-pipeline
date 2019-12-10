@@ -57,7 +57,7 @@ echo | fly -t ${CONCOURSE_TEAM} set-pipeline -p ${PIPELINE_NAME} -c ${PIPELINE_C
 if grep 'no changes to apply' ${SET_PIPELINE_OUTPUT}; then
   echo "finished!"
   exit 0
-else 
+else
   echo "found changes to apply"
 fi
 
@@ -66,7 +66,7 @@ echo
 echo "* STEP 7/8: Disabling old versions if new jobs added"
 if grep -Eo 'job.+has been added' ${SET_PIPELINE_OUTPUT}; then
   VERSIONS_ENDPOINT="/api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions"
-  VERSION_IDS=$(fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT} "" -- -sS | jq -r "map(select(.enabled and .version.number != \"${BUILD_VERSION}\")) | .[].id")
+  VERSION_IDS=$(fly -t ${CONCOURSE_TEAM} resource-versions -r ${PIPELINE_NAME}/version --json --count=9999999 | jq -r "map(select(.enabled and .version.number != \"${BUILD_VERSION}\")) | .[].id")
   for ID in $VERSION_IDS; do
     echo "disabling version id ${ID}"
     fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT}/${ID}/disable "" -- -X PUT -sS
