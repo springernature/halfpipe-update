@@ -29,6 +29,7 @@ EOF
 echo
 echo "* STEP 2/8: Updating halfpipe to latest version"
 halfpipe sync
+halfpipe version
 echo
 
 
