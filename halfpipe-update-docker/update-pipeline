@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-red=`tput setaf 1`
-green=`tput setaf 2`
-reset=`tput sgr0`
+green='\033[0;32m'
+reset='\033[0m'
 
-function echogreen() {
-  echo ${green}"$@"${reset}
+echogreen() {
+  echo -e "${green}$@${reset}"
 }
 
 CONCOURSE_URL="${CONCOURSE_URL:-https://concourse.halfpipe.io}"
