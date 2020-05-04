@@ -61,7 +61,8 @@ echo
 echogreen "* STEP 6/8: Checking if pipeline has changed"
 echo | fly -t ${CONCOURSE_TEAM} set-pipeline -p ${PIPELINE_NAME} -c ${PIPELINE_CONFIG} > ${SET_PIPELINE_OUTPUT}
 if grep 'no changes to apply' ${SET_PIPELINE_OUTPUT}; then
-  echo "finished!"
+  echo
+  echogreen "Finished!"
   exit 0
 else
   echo "found changes to apply"
