@@ -15,7 +15,7 @@ RUN curl -Lo /bin/fly "https://concourse.halfpipe.io/api/v1/cli?arch=amd64&platf
     && chmod +x /bin/fly
 
 # Get Halfpipe and sync to latest version
-RUN curl -Lo /bin/halfpipe "https://github.com/springernature/halfpipe/releases/download/3.29.5/halfpipe_linux_3.29.5" \
+RUN curl -Lo /bin/halfpipe "https://github.com/springernature/halfpipe/releases/download/3.60.0/halfpipe_linux_3.60.0" \
     && chmod +x /bin/halfpipe \
     && halfpipe sync
 
