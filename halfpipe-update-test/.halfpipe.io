@@ -1,5 +1,5 @@
 team: engineering-enablement
-pipeline: halfpipe-update-test-renamed
+pipeline: halfpipe-update-test
 
 feature_toggles:
 - update-pipeline
