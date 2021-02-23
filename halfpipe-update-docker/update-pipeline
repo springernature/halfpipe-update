@@ -78,7 +78,7 @@ if grep -Eo 'job.+has been added' ${SET_PIPELINE_OUTPUT}; then
 
   if fly disable-resource-version --help > /dev/null 2>&1; then
     ENABLED_VERSIONS=$(fly -t ${CONCOURSE_TEAM} resource-versions -r ${PIPELINE_NAME}/version --json --count=9999999 | jq -r "map(select(.enabled)) | .[].version.number")
-    for VER in $ENABLED_VERSIONS;
+    for VER in $ENABLED_VERSIONS; do
       fly -t ${CONCOURSE_TEAM} disable-resource-version -r ${PIPELINE_NAME}/version -v number:${VER}
     done
   else
