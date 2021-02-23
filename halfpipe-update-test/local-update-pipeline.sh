@@ -59,6 +59,9 @@ echo
 echogreen "* STEP 5/8: Running halfpipe to generate Concourse pipeline"
 halfpipe > ${PIPELINE_CONFIG}
 
+echo "hack update job to use local script"
+sed -i 's/path: update-pipeline/path: .\/local-update-pipeline.sh/' ${PIPELINE_CONFIG}
+
 
 echo
 echogreen "* STEP 6/8: Checking if pipeline has changed"
@@ -72,10 +75,12 @@ else
 fi
 
 
-# echo
-# echogreen "* STEP 7/8: Disabling old versions if new jobs added"
-# if grep -Eo 'job.+has been added' ${SET_PIPELINE_OUTPUT}; then
+echo
+echogreen "* STEP 7/8: Disabling old versions if new jobs added"
 
+if grep -Eo 'job.+has been added' ${SET_PIPELINE_OUTPUT}; then
+
+  echored 'disabling versions disabled'
 #   if fly disable-resource-version --help > /dev/null 2>&1; then
 #     ENABLED_VERSIONS=$(fly -t ${CONCOURSE_TEAM} resource-versions -r ${PIPELINE_NAME}/version --json --count=9999999 | jq -r "map(select(.enabled)) | .[].version.number")
 #     for VER in $ENABLED_VERSIONS;
@@ -90,9 +95,9 @@ fi
 #     done
 #   fi
 
-# else
-#   echo "no jobs added"
-# fi
+else
+  echo "no jobs added"
+fi
 
 
 echo
