@@ -23,3 +23,8 @@ tasks:
     image: alpine
   vars:
     FOO: foo2
+
+- name: run11
+  script: \env
+  docker:
+    image: alpine
