@@ -72,27 +72,27 @@ else
 fi
 
 
-echo
-echogreen "* STEP 7/8: Disabling old versions if new jobs added"
-if grep -Eo 'job.+has been added' ${SET_PIPELINE_OUTPUT}; then
+# echo
+# echogreen "* STEP 7/8: Disabling old versions if new jobs added"
+# if grep -Eo 'job.+has been added' ${SET_PIPELINE_OUTPUT}; then
 
-  if fly disable-resource-version --help > /dev/null 2>&1; then
-    ENABLED_VERSIONS=$(fly -t ${CONCOURSE_TEAM} resource-versions -r ${PIPELINE_NAME}/version --json --count=9999999 | jq -r "map(select(.enabled)) | .[].version.number")
-    for VER in $ENABLED_VERSIONS;
-      fly -t ${CONCOURSE_TEAM} disable-resource-version -r ${PIPELINE_NAME}/version -v number:${VER}
-    done
-  else
-    VERSIONS_ENDPOINT="/api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions"
-    VERSION_IDS=$(fly -t ${CONCOURSE_TEAM} resource-versions -r ${PIPELINE_NAME}/version --json --count=9999999 | jq -r "map(select(.enabled)) | .[].id")
-    for ID in $VERSION_IDS; do
-      echo "disabling version id = ${ID}"
-      fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT}/${ID}/disable "" -- -X PUT -sS
-    done
-  fi
+#   if fly disable-resource-version --help > /dev/null 2>&1; then
+#     ENABLED_VERSIONS=$(fly -t ${CONCOURSE_TEAM} resource-versions -r ${PIPELINE_NAME}/version --json --count=9999999 | jq -r "map(select(.enabled)) | .[].version.number")
+#     for VER in $ENABLED_VERSIONS;
+#       fly -t ${CONCOURSE_TEAM} disable-resource-version -r ${PIPELINE_NAME}/version -v number:${VER}
+#     done
+#   else
+#     VERSIONS_ENDPOINT="/api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions"
+#     VERSION_IDS=$(fly -t ${CONCOURSE_TEAM} resource-versions -r ${PIPELINE_NAME}/version --json --count=9999999 | jq -r "map(select(.enabled)) | .[].id")
+#     for ID in $VERSION_IDS; do
+#       echo "disabling version id = ${ID}"
+#       fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT}/${ID}/disable "" -- -X PUT -sS
+#     done
+#   fi
 
-else
-  echo "no jobs added"
-fi
+# else
+#   echo "no jobs added"
+# fi
 
 
 echo
