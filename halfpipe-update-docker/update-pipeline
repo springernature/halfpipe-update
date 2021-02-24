@@ -45,19 +45,19 @@ echogreen "* STEP 3/8: Logging into concourse"
 fly -t ${CONCOURSE_TEAM} login -c ${CONCOURSE_URL} -n ${CONCOURSE_TEAM} -u ${CONCOURSE_USERNAME} -p ${CONCOURSE_PASSWORD}
 
 
-# echo
-# echogreen "* STEP 4/8: Checking pipeline name"
-# _halfpipe_pipeline_name=$(yq e '.pipeline' .halfpipe.io*)
-# _current_branch=`git name-rev --name-only HEAD`
-# if [[ "$_current_branch" != "master" && "$_current_branch" != "main" ]]; then
-#   _halfpipe_pipeline_name=`echo $_halfpipe_pipeline_name-$_current_branch | tr '/' '_'`
-# fi
-# if [[ "$_halfpipe_pipeline_name" != "${PIPELINE_NAME}" ]]; then
-#   echored "Error: Pipeline name has changed (existing:${PIPELINE_NAME} new:$_halfpipe_pipeline_name)"
-#   echored "Pipelines must first be renamed with fly:"
-#   echored "  fly -t ${CONCOURSE_TEAM} rename-pipeline -o ${PIPELINE_NAME} -n $_halfpipe_pipeline_name"
-#   exit 1
-# fi
+echo
+echogreen "* STEP 4/8: Checking pipeline name"
+_halfpipe_pipeline_name=$(yq e '.pipeline' .halfpipe.io*)
+_current_branch=`git name-rev --name-only HEAD`
+if [[ "$_current_branch" != "master" && "$_current_branch" != "main" ]]; then
+  _halfpipe_pipeline_name=`echo $_halfpipe_pipeline_name-$_current_branch | tr '/' '_'`
+fi
+if [[ "$_halfpipe_pipeline_name" != "${PIPELINE_NAME}" ]]; then
+  echored "Error: Pipeline name has changed (existing:${PIPELINE_NAME} new:$_halfpipe_pipeline_name)"
+  echored "Pipelines must first be renamed with fly:"
+  echored "  fly -t ${CONCOURSE_TEAM} rename-pipeline -o ${PIPELINE_NAME} -n $_halfpipe_pipeline_name"
+  exit 1
+fi
 
 echo
 echogreen "* STEP 5/8: Running halfpipe to generate Concourse pipeline"
