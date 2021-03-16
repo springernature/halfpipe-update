@@ -25,8 +25,7 @@ SET_PIPELINE_OUTPUT="/tmp/set-pipeline-output"
 
 echo
 echogreen "* Halfpipe manifest:"
-cat .halfpipe.io*
-
+cat ${HALFPIPE_FILE_PATH:-.halfpipe.io*}
 
 echo
 echogreen "* STEP 1/8: Updating fly to latest version"
