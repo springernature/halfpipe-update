@@ -14,6 +14,8 @@ echogreen() {
 }
 
 CONCOURSE_URL="${CONCOURSE_URL:-https://concourse.halfpipe.io}"
+HALFPIPE_FILE_PATH="${HALFPIPE_FILE_PATH:-}"
+
 PIPELINE_CONFIG="/tmp/pipeline.yml"
 SET_PIPELINE_OUTPUT="/tmp/set-pipeline-output"
 
@@ -58,7 +60,11 @@ fi
 
 echo
 echogreen "* STEP 5/8: Running halfpipe to generate Concourse pipeline"
-halfpipe > ${PIPELINE_CONFIG}
+ARGS=""
+if [ -n "$HALFPIPE_FILE_PATH" ]; then
+  ARGS="-i $HALFPIPE_FILE_PATH"
+fi
+halfpipe $ARGS > ${PIPELINE_CONFIG}
 
 
 echo
