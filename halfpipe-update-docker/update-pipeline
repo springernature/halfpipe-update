@@ -15,6 +15,10 @@ echogreen() {
 
 CONCOURSE_URL="${CONCOURSE_URL:-https://concourse.halfpipe.io}"
 HALFPIPE_FILE_PATH="${HALFPIPE_FILE_PATH:-}"
+HALFPIPE_ARGS=""
+if [ -n "$HALFPIPE_FILE_PATH" ]; then
+  HALFPIPE_ARGS="-i $HALFPIPE_FILE_PATH"
+fi
 
 PIPELINE_CONFIG="/tmp/pipeline.yml"
 SET_PIPELINE_OUTPUT="/tmp/set-pipeline-output"
@@ -48,7 +52,7 @@ fly -t ${CONCOURSE_TEAM} login -c ${CONCOURSE_URL} -n ${CONCOURSE_TEAM} -u ${CON
 
 echo
 echogreen "* STEP 4/8: Checking pipeline name"
-_halfpipe_pipeline_name="$(halfpipe pipeline-name | tr -d '\n')"
+_halfpipe_pipeline_name="$(halfpipe pipeline-name $HALFPIPE_ARGS | tr -d '\n')"
 if [[ "${_halfpipe_pipeline_name}" != "${PIPELINE_NAME}" ]]; then
   echored "Error: Pipeline name has changed (existing:${PIPELINE_NAME} new:${_halfpipe_pipeline_name})"
   echored "Pipeline must first be renamed with fly:"
@@ -60,11 +64,7 @@ fi
 
 echo
 echogreen "* STEP 5/8: Running halfpipe to generate Concourse pipeline"
-ARGS=""
-if [ -n "$HALFPIPE_FILE_PATH" ]; then
-  ARGS="-i $HALFPIPE_FILE_PATH"
-fi
-halfpipe $ARGS > ${PIPELINE_CONFIG}
+halfpipe $HALFPIPE_ARGS > ${PIPELINE_CONFIG}
 
 
 echo
