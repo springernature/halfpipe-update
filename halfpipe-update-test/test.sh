@@ -2,8 +2,8 @@
 
 export PIPELINE_NAME="halfpipe-update-test"
 export CONCOURSE_TEAM="engineering-enablement"
-export CONCOURSE_USERNAME=$(vault read -field=username springernature/engineering-enablement/concourse)
-export CONCOURSE_PASSWORD=$(vault read -field=password springernature/engineering-enablement/concourse)
+export CONCOURSE_USERNAME=$(vault kv get -field=username springernature/engineering-enablement/concourse)
+export CONCOURSE_PASSWORD=$(vault kv get -field=password springernature/engineering-enablement/concourse)
 
 (
   cd ../halfpipe-update-docker
