@@ -69,7 +69,7 @@ if [[ "${_halfpipe_pipeline_name}" != "${PIPELINE_NAME}" ]]; then
   echored "  fly -t ${CONCOURSE_TEAM} rename-pipeline -o ${PIPELINE_NAME} -n ${_halfpipe_pipeline_name}"
   exit 1
 else
-  echogreen ${PIPELINE_NAME}
+  echogreen "ok"
 fi
 
 echo
