@@ -20,7 +20,7 @@ RUN curl -Lo /bin/halfpipe "https://github.com/springernature/halfpipe/releases/
     && halfpipe sync
 
 # get yq
-RUN curl -Lo /usr/bin/yq "https://github.com/mikefarah/yq/releases/download/v4.6.0/yq_linux_amd64" \
+RUN curl -Lo /usr/bin/yq "https://github.com/mikefarah/yq/releases/download/v4.27.3/yq_linux_amd64" \
   && chmod +x /usr/bin/yq
 
 ADD update-pipeline* /bin/

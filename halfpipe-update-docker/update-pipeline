@@ -51,7 +51,7 @@ fly -t ${CONCOURSE_TEAM} login -c ${CONCOURSE_URL} -n ${CONCOURSE_TEAM} -u ${CON
 
 echo
 echogreen "* STEP 4/9: Checking pipeline team"
-_halfpipe_pipeline_team="$(yq '.team' .halfpipe.io)"
+_halfpipe_pipeline_team="$(yq '.team' $HALFPIPE_FILE_PATH)"
 if [[ "${_halfpipe_pipeline_team}" != "${CONCOURSE_TEAM}" ]]; then
   echored "Error: Pipeline team has changed (existing:${CONCOURSE_TEAM} new:${_halfpipe_pipeline_team})"
   echored "You cannot update a pipeline in another team!"
