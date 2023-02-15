@@ -4,7 +4,6 @@ slack_channel: "#halfpipe-alerts"
 
 feature_toggles:
 - update-pipeline
-- docker-oci-build
 
 triggers:
 - type: git
