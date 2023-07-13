@@ -11,7 +11,7 @@ triggers:
 
 tasks:
 - type: run
-  name: run1
+  name: run1a
   script: \env
   docker:
     image: alpine

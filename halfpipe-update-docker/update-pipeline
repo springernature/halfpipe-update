@@ -14,7 +14,7 @@ echogreen() {
 }
 
 CONCOURSE_URL="${CONCOURSE_URL:-https://concourse.halfpipe.io}"
-HALFPIPE_FILE_PATH="${HALFPIPE_FILE_PATH:-}"
+HALFPIPE_FILE_PATH="${HALFPIPE_FILE_PATH:-.halfpipe.io}"
 HALFPIPE_ARGS=""
 if [ -n "$HALFPIPE_FILE_PATH" ]; then
   HALFPIPE_ARGS="-i $HALFPIPE_FILE_PATH"
@@ -28,7 +28,7 @@ echogreen "* Halfpipe manifest:"
 cat ${HALFPIPE_FILE_PATH:-.halfpipe.io*}
 
 echo
-echogreen "* STEP 1/9: Updating fly to latest version"
+echogreen "* STEP 1/10: Updating fly to latest version"
 cat >/root/.flyrc << EOF
   targets:
     ci:
@@ -38,7 +38,7 @@ fly -t ci sync
 
 
 echo
-echogreen "* STEP 2/9: Updating halfpipe to latest version"
+echogreen "* STEP 2/10: Updating halfpipe to latest version"
 halfpipe sync
 echo
 halfpipe version
@@ -46,22 +46,22 @@ echo
 
 
 echo
-echogreen "* STEP 3/9: Logging into concourse"
+echogreen "* STEP 3/10: Logging into concourse"
 fly -t ${CONCOURSE_TEAM} login -c ${CONCOURSE_URL} -n ${CONCOURSE_TEAM} -u ${CONCOURSE_USERNAME} -p ${CONCOURSE_PASSWORD}
 
 echo
-echogreen "* STEP 4/9: Checking pipeline team"
+echogreen "* STEP 4/10: Checking pipeline team"
 _halfpipe_pipeline_team="$(yq '.team' $HALFPIPE_FILE_PATH)"
 if [[ "${_halfpipe_pipeline_team}" != "${CONCOURSE_TEAM}" ]]; then
   echored "Error: Pipeline team has changed (existing:${CONCOURSE_TEAM} new:${_halfpipe_pipeline_team})"
-  echored "You cannot update a pipeline in another team!"
+  echored "You cannot update a pipeline in another team. Instead pause or delete the existing pipeline and upload a new one."
   exit 1
 else
-  echogreen ${CONCOURSE_TEAM}
+  echo ${CONCOURSE_TEAM}
 fi
 
 echo
-echogreen "* STEP 5/9: Checking pipeline name"
+echogreen "* STEP 5/10: Checking pipeline name"
 _halfpipe_pipeline_name="$(halfpipe pipeline-name $HALFPIPE_ARGS | tr -d '\n')"
 if [[ "${_halfpipe_pipeline_name}" != "${PIPELINE_NAME}" ]]; then
   echored "Error: Pipeline name has changed (existing:${PIPELINE_NAME} new:${_halfpipe_pipeline_name})"
@@ -73,12 +73,12 @@ else
 fi
 
 echo
-echogreen "* STEP 6/9: Running halfpipe to generate Concourse pipeline"
+echogreen "* STEP 6/10: Running halfpipe to generate Concourse pipeline"
 halfpipe $HALFPIPE_ARGS > ${PIPELINE_CONFIG}
 
 
 echo
-echogreen "* STEP 7/9: Checking if pipeline has changed"
+echogreen "* STEP 7/10: Checking if pipeline has changed"
 echo | fly -t ${CONCOURSE_TEAM} set-pipeline -p ${PIPELINE_NAME} -c ${PIPELINE_CONFIG} > ${SET_PIPELINE_OUTPUT}
 if grep 'no changes to apply' ${SET_PIPELINE_OUTPUT}; then
   echo
@@ -90,30 +90,54 @@ fi
 
 
 echo
-echogreen "* STEP 8/9: Disabling old versions if new jobs added"
+echogreen "* STEP 8/10: Disabling old versions if new jobs added"
 if grep -Eo 'job.+has been added' ${SET_PIPELINE_OUTPUT}; then
-
-  if fly disable-resource-version --help > /dev/null 2>&1; then
-    ENABLED_VERSIONS=$(fly -t ${CONCOURSE_TEAM} resource-versions -r ${PIPELINE_NAME}/version --json --count=9999999 | jq -r "map(select(.enabled)) | .[].version.number")
-    for VER in $ENABLED_VERSIONS; do
-      fly -t ${CONCOURSE_TEAM} disable-resource-version -r ${PIPELINE_NAME}/version -v number:${VER}
-    done
-  else
-    VERSIONS_ENDPOINT="/api/v1/teams/${CONCOURSE_TEAM}/pipelines/${PIPELINE_NAME}/resources/version/versions"
-    VERSION_IDS=$(fly -t ${CONCOURSE_TEAM} resource-versions -r ${PIPELINE_NAME}/version --json --count=9999999 | jq -r "map(select(.enabled)) | .[].id")
-    for ID in $VERSION_IDS; do
-      echo "disabling version id = ${ID}"
-      fly -t ${CONCOURSE_TEAM} curl ${VERSIONS_ENDPOINT}/${ID}/disable "" -- -X PUT -sS
-    done
-  fi
-
+  ENABLED_VERSIONS=$(fly -t ${CONCOURSE_TEAM} resource-versions -r ${PIPELINE_NAME}/version --json --count=9999999 | jq -r "map(select(.enabled)) | .[].version.number")
+  for VER in $ENABLED_VERSIONS; do
+    fly -t ${CONCOURSE_TEAM} disable-resource-version -r ${PIPELINE_NAME}/version -v number:${VER}
+  done
 else
   echo "no jobs added"
 fi
 
 
 echo
-echogreen "* STEP 9/9: Updating pipeline"
+echogreen "* STEP 9/10: Check pipeline version"
+# if the version file is not found in GCS it might be because the pipeline has been renamed.
+# check to see if the pipeline's version resource has history, and if it does write the latest version to the GCS file.
+VERSION_FILE="/tmp/version-file"
+VERSION_FILE_ERR="/tmp/version-file-err"
+
+if [[ -n "${HALFPIPE_SEMVER_SA:-}" ]]; then
+  # login to gcloud
+  echo "${HALFPIPE_SEMVER_SA}" | gcloud auth activate-service-account --key-file=/dev/stdin
+
+  # read version file
+  gsutil cat gs://halfpipe-io-semver/${CONCOURSE_TEAM}-${PIPELINE_NAME} > $VERSION_FILE 2> $VERSION_FILE_ERR || true
+  if grep 'No URLs matched' ${VERSION_FILE_ERR}; then
+    echo 'version file not found'
+    RESOURCE_VERSION=$(fly -t ${CONCOURSE_TEAM} resource-versions -r ${PIPELINE_NAME}/version --json --count=1 | jq -r ".[].version.number")
+    echo "latest version resource = ${RESOURCE_VERSION}"
+    if [[ "${RESOURCE_VERSION}" = "0.0.0" ]]; then
+      echo 'no version history found'
+    elif [[ "${RESOURCE_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+      # is a valid version number so write it to GCS
+      gsutil cp <(echo -n "${RESOURCE_VERSION}") gs://halfpipe-io-semver/${CONCOURSE_TEAM}-${PIPELINE_NAME}
+      echogreen "updated version to ${RESOURCE_VERSION}"
+    else
+      echored "error checking resource version. please contact the Release Engineering team (@re) in slack channel #ee"
+      exit 1
+    fi
+  else
+    cat ${VERSION_FILE_ERR} ${VERSION_FILE}
+    echo
+  fi
+else
+  echo 'skipping because env var HALFPIPE_SEMVER_SA not set'
+fi
+
+echo
+echogreen "* STEP 10/10: Updating pipeline"
 fly -t ${CONCOURSE_TEAM} set-pipeline -p ${PIPELINE_NAME} -c ${PIPELINE_CONFIG} --check-creds --non-interactive
 
 echo
