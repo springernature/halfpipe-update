@@ -25,7 +25,7 @@ RUN curl -Lo /bin/halfpipe "https://github.com/springernature/halfpipe/releases/
 RUN curl -Lo /usr/bin/yq "https://github.com/mikefarah/yq/releases/download/v4.27.3/yq_linux_amd64" \
   && chmod +x /usr/bin/yq
 
-ADD update-pipeline* /bin/
+ADD update-* /bin/
 
 # Get gcloud for gsutil
 RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
