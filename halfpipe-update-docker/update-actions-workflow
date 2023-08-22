@@ -27,20 +27,17 @@ halfpipe version
 echo
 
 echo
-echogreen "* STEP 2/3: Running halfpipe to generate workflow"
+echogreen "* STEP 2/3: Running halfpipe"
 halfpipe $HALFPIPE_ARGS
 
 echo
 echogreen "* STEP 3/3: Checking if workflow has changed"
-if git diff --quiet; then
+if git diff -I '^# Generated using halfpipe' --quiet; then
   echo "synced=true" >> "$GITHUB_OUTPUT"
   echogreen "halfpipe manifest and workflow are in sync"
   exit 0
 else 
   echo "synced=false" >> "$GITHUB_OUTPUT"
-  echored "halfpipe manifest and workflow are not in sync."
-  git diff
-fi 
-
-echo
-echogreen "Finished!"
+  echored "halfpipe manifest and workflow are not in sync"
+  git diff -I '^# Generated using halfpipe'
+fi
