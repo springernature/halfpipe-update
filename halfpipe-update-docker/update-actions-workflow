@@ -31,7 +31,7 @@ echogreen "* STEP 2/3: Running halfpipe to generate workflow"
 halfpipe $HALFPIPE_ARGS
 
 echo
-echogreen "* STEP 3/4: Checking if workflow has changed"
+echogreen "* STEP 3/3: Checking if workflow has changed"
 if git diff --quiet; then
   echo "synced=true" >> "$GITHUB_OUTPUT"
   echogreen "halfpipe manifest and workflow are in sync"
