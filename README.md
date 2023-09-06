@@ -2,13 +2,14 @@
 
 [![build status](http://badger.halfpipe.io/engineering-enablement/halfpipe-update-docker)](https://concourse.halfpipe.io/teams/engineering-enablement/pipelines/halfpipe-update-docker)
 
-This repo builds a docker image which is designed to be used in a concourse task to self-update a pipeline. It ensures the pipeline configuration in Concourse matches the halfpipe file in the current git revision.
+This repo builds a docker image which is designed to be used in CI to keep the configuration in sync with the halfpipe manifest.
 
-See <https://docs.halfpipe.io/auto-updating-pipelines/> for more info on using it.
+There are scripts for Concourse (`update-pipeline`) and GitHub Actions (`update-actions-workflow`).
+
+See <https://ee.public.springernature.app/rel-eng/halfpipe/features/> for more info on using it.
 
 
-### How it works
-
+## Concourse 
 1. Update fly.
 
 2. Update halfpipe.
@@ -27,6 +28,12 @@ If the pipeline has changed:
 
 8. Check if any new jobs have been added. If so, disable all existing versions. This prevents the new jobs triggering immediately with the previous version.
 
-9. Check the version file in GCS. It should match the version resource's latest version number. If it is missing or 0.0.0 it could be because the pipeline has been renamed.
+9. Update the pipeline.
 
-10. Update the pipeline.
+
+## GitHub Actions
+1. Update halfpipe
+
+2. Run `halfpipe` to generate workflow
+
+3. Set GitHub Actions output variable `synced=true|false`. Halfpipe then uses this variable to either commit the changes or continue running the workflow.
