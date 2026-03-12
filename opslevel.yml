@@ -1,0 +1,10 @@
+version: 1
+component:
+  name: Halfpipe Update
+  description: Docker image for auto updating pipelines
+  type: application_module
+  system: APPL-437
+  owner: engineering-enablement
+  language: bash
+  lifecycle: core
+  tier: mission-critical
