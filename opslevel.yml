@@ -12,3 +12,7 @@ component:
     pipelines:
       - concourse_engineering-enablement_halfpipe-update-docker_5943
       - concourse_engineering-enablement_halfpipe-update-test_3201
+  tools:
+    - category: issue_tracking
+      name: GitHub
+      url: https://github.com/springernature/halfpipe-update/issues
