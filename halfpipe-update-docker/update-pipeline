@@ -103,7 +103,7 @@ fi
 
 echo
 echogreen "* STEP 9/9: Updating pipeline"
-fly -t ${CONCOURSE_TEAM} set-pipeline -p ${PIPELINE_NAME} -c ${PIPELINE_CONFIG} --check-creds --non-interactive
+fly -t ${CONCOURSE_TEAM} set-pipeline -p ${PIPELINE_NAME} -c ${PIPELINE_CONFIG} --non-interactive
 
 echo
 echo
