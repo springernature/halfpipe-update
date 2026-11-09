@@ -1,6 +1,5 @@
 team: engineering-enablement
 pipeline: halfpipe-update-docker
-slack_channel: "#ee-release-engineering"
 
 feature_toggles:
 - update-pipeline
